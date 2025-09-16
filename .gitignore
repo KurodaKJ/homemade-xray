@@ -1,0 +1,33 @@
+# Compiled object files
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.out
+
+# Debug and release build directories
+build/
+Debug/
+Release/
+
+# IDE-specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.user
+*.suo
+*.userosscache
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Dependency directories
+deps/
+lib/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
