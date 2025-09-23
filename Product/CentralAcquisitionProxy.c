@@ -9,14 +9,14 @@ static bool connect();
 static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
 static bool getMsgFromCentralAcquisition(char msg[MAX_MSG_SIZE]);
 
-
+/*
 const char * CONNECT_MSG = "CONNECT";
 const char * DISCONNECT_MSG = "DISCONNECT";
 const char * EXAMINATION_MSG = "EXAM";  // Remark that this msg will have an argument.
                                         // For instance the actual msg could be EXAM:0 
 										// The 0 indicates a single shot exam
 const char * DOSE_MSG = "DOSE";			// Will also have an argument
-
+*/
 
 bool connectWithCentralAcquisition()
 {
@@ -113,7 +113,7 @@ static bool setupSerialConnection()
 	printf("Setting up serial connection...  ");
 	do {	
 		char ttyName[30];
-		sprintf(ttyName, "/dev/ttyACM%d", ACMNumber); 
+		sprintf(ttyName, "/dev/ttyUSB0");
 		if (setupSerialPort(ttyName) == 0) {	
 			printf("  ...connected with %s\n", ttyName);
 			return true;

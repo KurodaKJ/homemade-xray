@@ -16,6 +16,17 @@ typedef enum {
 	EXAM_TYPE_NONE
 } EXAMINATION_TYPES;
 
+
+#define CONNECT_MSG  "CONNECT"
+#define DISCONNECT_MSG  "DISCONNECT"
+#define EXAMINATION_MSG  "EXAM"
+// Remark that this msg will have an argument.
+// For instance the actual msg could be EXAM:0
+// The 0 indicates a single shot exam
+#define DOSE_MSG "DOSE"
+// Will also have an argument
+
+
 #define MAX_MSG_SIZE 	(100)
 
 
