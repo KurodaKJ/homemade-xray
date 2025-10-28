@@ -2,11 +2,18 @@
 #define DOSEADMIN_H
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 
 #define MAX_PATIENTNAME_SIZE	(80)
 #define HASHTABLE_SIZE			(256)
+#define MAX_PATIENTS_PER_BUCKET (100)
+#define MAX_DOSE_MEASUREMENT (10)
 
+typedef struct {
+	char name[MAX_PATIENTNAME_SIZE];
+	int doses[MAX_DOSE_MEASUREMENT];
+} Patient;
 
 /*************************************************************************************** 
  * Creates and initializes a hash table. No patient data will be present after creation
@@ -106,7 +113,7 @@ int8_t IsPatientPresent(char patientName[MAX_PATIENTNAME_SIZE]);
  * It is a precondition that patientName is not NULL and is \0 terminated
  */
 int8_t GetNumberOfMeasurements(char patientName[MAX_PATIENTNAME_SIZE], 
-                               size_t * nrOfMeasurements);
+                               size_t * numberOfMeasurements);
 
 
 /***************************************************************************************
