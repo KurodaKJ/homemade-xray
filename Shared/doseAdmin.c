@@ -5,11 +5,24 @@
 #include <math.h>
 #include <stdio.h>
 
+
+// Brice: you think you have used 80% AI to complete this work.
+// It is good to be transparent BUT this is too much
+// My advice : use AI as a supportive tool not as tool
+// doing the whole job for you. Reason: using too much AI discard learning
+
+// HasEntry does not hurt. It is a bulldoser to kill a mostiko.
+// My advise : use an array of pointers derived from (Patient* patientPtr[HASHTABLE_SIZE];)
+
 typedef struct {
     Patient* patientPtr;   // dynamically allocated patient (NULL = not used)
 } HashEntry;
 
 static HashEntry hashTable[HASHTABLE_SIZE];
+// Brice: it is important to be able to explain
+// working solutions are important but explaining the process is
+// even more important
+
 
 // Simple hash: sum of ASCII values mod table size
 static uint8_t hashFunction(char patientName[MAX_PATIENTNAME_SIZE]) {
@@ -17,11 +30,24 @@ static uint8_t hashFunction(char patientName[MAX_PATIENTNAME_SIZE]) {
 
     // Calculate the sum of ASCII values
     for (int i = 0; patientName[i] != '\0'; i++)
+    { // Brice use specifically a scope
         sum += (unsigned char)patientName[i];
+    }
 
     // Return the hash value
-    return (uint8_t)(sum % HASHTABLE_SIZE);
+    return (uint8_t)(sum % HASHTABLE_SIZE); // Brice: it is important to be able to explain
+                                            // working solutions are important but explaining the process is
+                                            // even more important
 }
+
+
+// 0 % 4 =
+// 1 % 4 =
+// 2 % 4 =
+// 3 % 4 =
+// 4 % 4 =
+// 5 % 4 =
+
 
 // Initialize the hash table
 void CreateHashTable() {
@@ -42,7 +68,9 @@ void RemoveAllDataFromHashTable() {
 // Add a patient to the hash table
 int8_t AddPatient(char patientName[MAX_PATIENTNAME_SIZE]) {
     // Check if the patient name is too long
-    if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
+    if (strlen(patientName) >= MAX_PATIENTNAME_SIZE) // Brice:
+        // Brice: using string library is fine
+        // Most important = make your own choices + justify your choicesS
         return -3;
 
     // Find the hash index in the hash table
@@ -66,7 +94,10 @@ int8_t AddPatient(char patientName[MAX_PATIENTNAME_SIZE]) {
     strcpy(p->name, patientName);
 
     // Initialize the doses array
-    for (int i = 0; i < MAX_DOSE_MEASUREMENT; i++) p->doses[i] = 0;
+    for (int i = 0; i < MAX_DOSE_MEASUREMENT; i++)
+    {
+        p->doses[i] = 0; // Brice always use scopes
+    }
 
     hashTable[index].patientPtr = p;
     return 0;
@@ -107,6 +138,7 @@ int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
         return -1; // unknown patient
 
     uint32_t sum = 0;
+    // Brice: you need to mnake use of the dates
     for (int i = 0; i < MAX_DOSE_MEASUREMENT; i++)
         sum += p->doses[i];
     *totalDose = sum;

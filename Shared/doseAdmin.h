@@ -12,8 +12,15 @@
 
 typedef struct {
 	char name[MAX_PATIENTNAME_SIZE];
-	int doses[MAX_DOSE_MEASUREMENT];
+	DoseData dose[MAX_DOSE_MEASUREMENT];
+    uint8_t numOfMeasurements;
+    Patient *next;
 } Patient;
+
+typedef struct {
+    int amount;
+    Date date;
+} DoseData;
 
 /*************************************************************************************** 
  * Creates and initializes a hash table. No patient data will be present after creation
