@@ -43,10 +43,10 @@ int main(int argc, char* argv[])
 			switch (choice)
 			{
 			case MO_ADD_PATIENT:
-				// add here your add patient code
+				AddPatient(selectedPatient);
 				break;
 			case MO_DELETE_PATIENT:
-				// add here your delete patient code
+				RemovePatient(selectedPatient);
 				break;
 			case MO_SELECT_PATIENT:
 				// add here your select patient code

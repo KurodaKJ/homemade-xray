@@ -1,28 +1,12 @@
 #include "doseAdmin.h"
 #include <string.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 
-// Brice: you think you have used 80% AI to complete this work.
-// It is good to be transparent BUT this is too much
-// My advice : use AI as a supportive tool not as tool
-// doing the whole job for you. Reason: using too much AI discard learning
-
-// HasEntry does not hurt. It is a bulldoser to kill a mostiko.
-// My advise : use an array of pointers derived from (Patient* patientPtr[HASHTABLE_SIZE];)
-
-typedef struct {
-    Patient* patientPtr;   // dynamically allocated patient (NULL = not used)
-} HashEntry;
-
-static HashEntry hashTable[HASHTABLE_SIZE];
-// Brice: it is important to be able to explain
-// working solutions are important but explaining the process is
-// even more important
-
+Patient* patientList[HASHTABLE_SIZE]; // This will guaranteed to be all NULL already, no?
 
 // Simple hash: sum of ASCII values mod table size
 static uint8_t hashFunction(char patientName[MAX_PATIENTNAME_SIZE]) {
@@ -40,174 +24,261 @@ static uint8_t hashFunction(char patientName[MAX_PATIENTNAME_SIZE]) {
                                             // even more important
 }
 
-
-// 0 % 4 =
-// 1 % 4 =
-// 2 % 4 =
-// 3 % 4 =
-// 4 % 4 =
-// 5 % 4 =
-
-
 // Initialize the hash table
 void CreateHashTable() {
-    for (int i = 0; i < HASHTABLE_SIZE; i++)
-        hashTable[i].patientPtr = NULL;
+    // Do we really need this?
 }
 
 // Remove all patient data from the hash table
 void RemoveAllDataFromHashTable() {
-    for (int i = 0; i < HASHTABLE_SIZE; i++) {
-        if (hashTable[i].patientPtr != NULL) {
-            free(hashTable[i].patientPtr);
-            hashTable[i].patientPtr = NULL;
+
+    for (int i = 0; i < HASHTABLE_SIZE; i++)
+    {
+        Patient *current = patientList[i];
+
+        while (current != NULL)
+        {
+            Patient *tempNext = current->next;
+
+            RemoveAllDoseData(&current->dose);
+
+            free(current);
+
+            current = tempNext;
         }
+
+        patientList[i] = NULL;
     }
 }
 
 // Add a patient to the hash table
+// Brice: make unit tests!
 int8_t AddPatient(char patientName[MAX_PATIENTNAME_SIZE]) {
-    // Check if the patient name is too long
-    if (strlen(patientName) >= MAX_PATIENTNAME_SIZE) // Brice:
+
+    if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
+    {
         // Brice: using string library is fine
         // Most important = make your own choices + justify your choicesS
         return -3;
-
-    // Find the hash index in the hash table
-    uint8_t index = hashFunction(patientName);
-
-    // Check if the patient is already in the hash table
-    if (hashTable[index].patientPtr != NULL)
-    {
-        // Check if the patient name is already in the hash table
-        if (strcmp(hashTable[index].patientPtr->name, patientName) == 0)
-            return -1; // already present
-        else
-            return -2; // failed to allocate memory
     }
 
-    // Allocate memory for the patient
-    Patient* p = malloc(sizeof(Patient));
+    if (IsPatientPresent(patientName) == 0)
+    {
+        return -1;
+    }
+
+    uint8_t index = hashFunction(patientName);
+
+    Patient *p = malloc(sizeof(Patient));
     if (p == NULL)
-        return -2; // failed to allocate memory
+    {
+        return -2;
+    }
 
     strcpy(p->name, patientName);
 
-    // Initialize the doses array
-    for (int i = 0; i < MAX_DOSE_MEASUREMENT; i++)
-    {
-        p->doses[i] = 0; // Brice always use scopes
-    }
+    p->dose.next = NULL;
 
-    hashTable[index].patientPtr = p;
+    p->next = patientList[index];
+
+    patientList[index] = p;
+
     return 0;
 }
 
 int8_t AddPatientDose(char patientName[MAX_PATIENTNAME_SIZE], Date* date, uint16_t dose) {
-    // Check if the patient name is too long
-    if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
-        return -3;
 
-    // Find the hash index in the hash table
+    if (strlen(patientName) >= MAX_PATIENTNAME_SIZE) {
+        return -3;
+    }
+
+    if (IsPatientPresent(patientName) == -1)
+    {
+        return -1;
+    }
+
     uint8_t index = hashFunction(patientName);
 
-    Patient* p = hashTable[index].patientPtr;
-    if (p == NULL)
-        return -1; // unknown patient
+    Patient *p = patientList[index];
 
-    for (int i = 0; i < MAX_DOSE_MEASUREMENT; i++) {
-        if (p->doses[i] == 0) {
-            p->doses[i] = dose;
-            return 0;
+    while (true)
+    {
+        if (strcmp(p->name, patientName) == 0)
+        {
+            break;
         }
+        p = p->next;
     }
-    return -2;
+
+    DoseData *newDoseData = malloc(sizeof(DoseData));
+    if (newDoseData == NULL)
+    {
+        return -2;
+    }
+
+    newDoseData->amount = dose;
+    newDoseData->date = *date;
+    newDoseData->next = p->dose.next;
+    p->dose.next = newDoseData;
+
+    return 0;
 }
 
-// This is still needs to be implement with dates
+void RemoveAllDoseData(DoseData *dose)
+{
+    while (dose != NULL)
+    {
+        DoseData *nextNode = dose->next;
+        free(dose);
+        dose = nextNode;
+    }
+}
+
+// TODO: Still need to implement this
+// Brice: First discard the date -> then you test -> Then you check the date
+// For the date => think of incremental logic (year, Then Month, then day)
 int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
                            Date* startDate, Date* endDate, uint32_t* totalDose) {
-    // Check if the patient name is too long
+
     if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
+    {
         return -2;
+    }
 
-    // Find the hash index in the hash table
+    if (IsPatientPresent(patientName) == -1)
+    {
+        return -1;
+    }
+
     uint8_t index = hashFunction(patientName);
-    Patient* p = hashTable[index].patientPtr;
-    if (p == NULL)
-        return -1; // unknown patient
 
-    uint32_t sum = 0;
-    // Brice: you need to mnake use of the dates
-    for (int i = 0; i < MAX_DOSE_MEASUREMENT; i++)
-        sum += p->doses[i];
-    *totalDose = sum;
+    Patient *p = patientList[index];
+
+    while (true)
+    {
+        if (strcmp(p->name, patientName) == 0)
+        {
+            break;
+        }
+        p = p->next;
+    }
+
+    *totalDose = 0;
+    DoseData *currentDose = &p->dose;
+
+    if (currentDose == NULL) return 0;
+
+    // Stuck at here
+
     return 0;
 }
 
 int8_t RemovePatient(char patientName[MAX_PATIENTNAME_SIZE]) {
+    
     if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
+    {
         return -2;
-
-    uint8_t index = hashFunction(patientName);
-    Patient* p = hashTable[index].patientPtr;
-    if (p == NULL)
-        return -1;
-
-    if (strcmp(p->name, patientName) == 0) {
-        free(p);
-        hashTable[index].patientPtr = NULL;
-        return 0;
     }
-    return -1;
+
+    if (IsPatientPresent(patientName) == -1)
+    {
+        return -1;
+    }
+
+    // Brice: solve warnings
+    uint8_t index = hashFunction(patientName);
+    Patient *current = patientList[index];
+    Patient *previous = NULL;
+
+    while (true) // Brice: make a unit test
+    {
+        if (strcmp(current->name, patientName) == 0)
+        {
+            if (previous == NULL)
+            {
+                patientList[index] = current->next;
+                RemoveAllDoseData(current->dose.next); // Brice: use array for Dose may be easier
+                free(current);
+                return 0;
+            }
+
+            previous->next = current->next;
+            RemoveAllDoseData(current->dose.next);
+            free(current);
+            return 0;
+        }
+        previous = current;
+        current = current->next;
+    }
+
 }
 
 int8_t IsPatientPresent(char patientName[MAX_PATIENTNAME_SIZE]) {
     if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
-        return -2;
+    {
+        return -2; // Max length exceeded
+    }
 
     uint8_t index = hashFunction(patientName);
-    Patient* p = hashTable[index].patientPtr;
-    if (p != NULL && strcmp(p->name, patientName) == 0)
-        return 0;
+
+    Patient *current = patientList[index];
+
+    while (current != NULL)
+    {
+        if (strcmp(current->name, patientName) == 0)
+        {
+            return 0;
+        }
+
+        current = current->next;
+    }
+
     return -1;
 }
 
 int8_t GetNumberOfMeasurements(char patientName[MAX_PATIENTNAME_SIZE], size_t* numberOfMeasurements) {
     if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
+    {
         return -2;
+    }
+
+    if (IsPatientPresent(patientName) == -1)
+    {
+        return -1;
+    }
 
     uint8_t index = hashFunction(patientName);
-    Patient* p = hashTable[index].patientPtr;
-    if (p == NULL)
-        return -1;
+    Patient *p = patientList[index];
+
+    while (true)
+    {
+        if (strcmp(p->name, patientName) == 0)
+        {
+            break;
+        }
+        p = p->next;
+    }
 
     size_t count = 0;
-    for (int i = 0; i < MAX_DOSE_MEASUREMENT; i++) {
-        if (p->doses[i] != 0) count++;
+
+    DoseData *currentDose = &p->dose;
+
+    while (currentDose != NULL)
+    {
+        count++;
+        currentDose = currentDose->next;
     }
+
     *numberOfMeasurements = count;
+
     return 0;
 }
 
 // Calculates basic stats over the hash table (algorithm basics)
+// Brice: start with totalNumberOfPatients, then averagenumber, then standardDeviation
 void GetHashPerformance(size_t* totalNumberOfPatients, double* averageNumberOfPatients,
                         double* standardDeviation) {
-    size_t total = 0;
-    double sum = 0.0;
-    double sumSquare = 0.0;
-
-    for (int i = 0; i < HASHTABLE_SIZE; i++) {
-        int count = (hashTable[i].patientPtr != NULL) ? 1 : 0;
-        total += count;
-        sum += count;
-        sumSquare += count * count;
-    }
-
-    *totalNumberOfPatients = total;
-    *averageNumberOfPatients = sum / HASHTABLE_SIZE;
-    *standardDeviation = sqrt((sumSquare / HASHTABLE_SIZE) -
-                              ((*averageNumberOfPatients) * (*averageNumberOfPatients)));
+    // TODO: Implement this!
 }
 
 int8_t WriteToFile(char filePath[MAX_FILEPATH_LEGTH])
@@ -218,4 +289,9 @@ int8_t WriteToFile(char filePath[MAX_FILEPATH_LEGTH])
 int8_t ReadFromFile(char filePath[MAX_FILEPATH_LEGTH])
 {
 	 return -1;
+}
+
+static int CompareDates(Date d1, Date d2)
+{
+    // TODO: Create a function to compare dates
 }
