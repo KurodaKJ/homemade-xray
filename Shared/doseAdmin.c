@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+static bool IsDateInRange(Date date, Date startDate, Date endDate);
 
 Patient* patientList[HASHTABLE_SIZE]; // This will guaranteed to be all NULL already, no?
 
@@ -134,7 +135,6 @@ void RemoveAllDoseData(DoseData *dose)
     }
 }
 
-// TODO: Still need to implement this
 // Brice: First discard the date -> then you test -> Then you check the date
 // For the date => think of incremental logic (year, Then Month, then day)
 int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
@@ -153,8 +153,8 @@ int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
     uint8_t index = hashFunction(patientName);
 
     Patient *p = patientList[index];
-
-    while (true)
+      // This can (maybe) be a support function
+    while (true) // Brice: avoid while(true) , instead while (patient name does not match)
     {
         if (strcmp(p->name, patientName) == 0)
         {
@@ -164,11 +164,18 @@ int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
     }
 
     *totalDose = 0;
-    DoseData *currentDose = &p->dose;
+    DoseData *currentDose = &p->dose;   
 
     if (currentDose == NULL) return 0;
 
-    // Stuck at here
+    while (currentDose != NULL)  // Ubnit tests!
+    {
+        if (IsDateInRange(currentDose->date, *startDate, *endDate))
+        {
+            *totalDose += currentDose->amount;
+        }
+        currentDose = currentDose->next;
+    }
 
     return 0;
 }
@@ -301,3 +308,5 @@ static bool IsDateInRange(Date date, Date startDate, Date endDate)
     // Check if date is within range
     return (dateValue >= startDateValue) && (dateValue <= endDateValue);
 }
+
+
