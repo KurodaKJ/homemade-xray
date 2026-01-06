@@ -291,7 +291,13 @@ int8_t ReadFromFile(char filePath[MAX_FILEPATH_LEGTH])
 	 return -1;
 }
 
-static int CompareDates(Date d1, Date d2)
+static bool IsDateInRange(Date date, Date startDate, Date endDate)
 {
-    // TODO: Create a function to compare dates
+    // Make dates comparable as integers YYYYMMDD
+    int dateValue = date.year * 10000 + date.month * 100 + date.day;
+    int startDateValue = startDate.year * 10000 + startDate.month * 100 + startDate.day;
+    int endDateValue = endDate.year * 10000 + endDate.month * 100 + endDate.day;
+
+    // Check if date is within range
+    return (dateValue >= startDateValue) && (dateValue <= endDateValue);
 }
