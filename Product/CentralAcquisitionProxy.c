@@ -6,14 +6,14 @@
 
 static bool setupSerialConnection();
 static bool connect();
-static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
+static bool writeMsgToSerialPort(const char *msg);
 static bool getMsgFromCentralAcquisition(char msg[MAX_MSG_SIZE]);
 
 /*
 const char * CONNECT_MSG = "CONNECT";
 const char * DISCONNECT_MSG = "DISCONNECT";
 const char * EXAMINATION_MSG = "EXAM";  // Remark that this msg will have an argument.
-                                        // For instance the actual msg could be EXAM:0 
+                                        // For instance the actual msg could be EXAM:0
 										// The 0 indicates a single shot exam
 const char * DOSE_MSG = "DOSE";			// Will also have an argument
 */
@@ -153,7 +153,7 @@ static bool connect()
 	return connected;
 }
 
-static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE])
+static bool writeMsgToSerialPort(const char *msg)
 {
 	writeSerialPort(MSG_START_SYMBOL);
 	int i = 0;
