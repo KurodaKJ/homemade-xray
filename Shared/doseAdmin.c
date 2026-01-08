@@ -308,5 +308,3 @@ static bool IsDateInRange(Date date, Date startDate, Date endDate)
     // Check if date is within range
     return (dateValue >= startDateValue) && (dateValue <= endDateValue);
 }
-
-
