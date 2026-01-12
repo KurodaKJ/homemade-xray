@@ -335,7 +335,40 @@ int8_t ReadFromFile(char filePath[MAX_FILEPATH_LEGTH])
     }
 
     char patientName[MAX_PATIENTNAME_SIZE];
-    return -1;
+    while (fscanf(file, "%79s", patientName) == 1)
+    {
+        // Add patient to hash table
+        if (AddPatient(patientName) != 0)
+        {
+            fclose(file);
+            return -1; // Failed to add patient
+        }
+
+        uint8_t amount;
+        uint8_t day, month;
+        uint16_t year;
+        char endDoseMarker[10];
+
+        // Read dose data until "END_DOSE" is encountered
+        while (fscanf(file, "%hhu %hhu %hhu %hu", &amount, &day, &month, &year) == 4)
+        {
+            Date date = {day, month, year};
+            if (AddPatientDose(patientName, &date, amount) != 0)
+            {
+                fclose(file);
+                return -1; // Failed to add dose data
+            }
+
+            // Check for end of dose data marker
+            if (fscanf(file, "%9s", endDoseMarker) == 1 && strcmp(endDoseMarker, "END_DOSE") == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    fclose(file);
+    return 0;
 }
 
 static bool IsDateInRange(Date date, Date startDate, Date endDate)
