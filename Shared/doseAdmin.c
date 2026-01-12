@@ -290,12 +290,48 @@ void GetHashPerformance(size_t* totalNumberOfPatients, double* averageNumberOfPa
 
 int8_t WriteToFile(char filePath[MAX_FILEPATH_LEGTH])
 {
-	 return -1;
+    FILE *file = fopen(filePath, "w");
+    if (file == NULL)
+    {
+        return -1; // Failed to open file
+    }
+
+    // We loop through every element in the hash table
+    for (int i = 0; i < HASHTABLE_SIZE; i++)
+    {
+        Patient *current = patientList[i];
+
+        // We then loop through each element in the linked list
+        while (current != NULL)
+        {
+            // Write patient name
+            fprintf(file, "%s\n", current->name);
+
+            // Write dose data
+            DoseData *currentDose = &current->dose;
+            while (currentDose != NULL)
+            {
+                fprintf(file, "%d %d %d %d\n", currentDose->amount, currentDose->date.day, currentDose->date.month, currentDose->date.year);
+                currentDose = currentDose->next;
+            }
+            current = current->next;
+        }
+    }
+
+    fclose(file);
+    return 0;
 }
 
 int8_t ReadFromFile(char filePath[MAX_FILEPATH_LEGTH])
 {
-	 return -1;
+    FILE *file = fopen(filePath, "r");
+    if (file == NULL)
+    {
+        return -1; // Failed to open file
+    }
+
+    char patientName[MAX_PATIENTNAME_SIZE];
+    return -1;
 }
 
 static bool IsDateInRange(Date date, Date startDate, Date endDate)
