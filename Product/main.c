@@ -52,12 +52,11 @@ int main(int argc, char* argv[])
 				// add here your select patient code
 				break;
 			case MO_SELECT_EXAMINATION_TYPE:
-			    if (centralAcqConnectionState == CONNECTED_WITH_CENTRAL_ACQUISITION) {	
-					// add here your select examination code
-				}
-				else {
+				if (centralAcqConnectionState != CONNECTED_WITH_CENTRAL_ACQUISITION) {
 					printf("This option is only valid when connected with CentralAcquisition\n");
+					break;
 				}
+				// add here your select examination code
 				break;
 			case MO_QUIT:
 				disconnectFromCentralAcquisition();
