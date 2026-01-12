@@ -8,43 +8,159 @@
 
 void setUp(void)
 {
-    // This is run before EACH test
+    CreateHashTable();
 }
 
 void tearDown(void)
 {
-    // This is run after EACH test
+    RemoveAllDataFromHashTable();
 }
 
-void test_FailTest(void)
+void test_AddPatient(void)
 {
-    TEST_ASSERT_EQUAL(1, 0); 
+    char johnDoe[MAX_PATIENTNAME_SIZE] = "JohnDoe";
+    char longName[81];
+
+    // Test adding a patient successfully
+    TEST_ASSERT_EQUAL(0, AddPatient(johnDoe));
+
+    // Test adding a patient with a name that is too long
+    memset(longName, 'A', 80);
+    longName[80] = '\0';
+    TEST_ASSERT_EQUAL(-3, AddPatient(longName));
+
+    // Test adding a duplicate patient
+    TEST_ASSERT_EQUAL(-1, AddPatient(johnDoe));
 }
 
-void test_LeakTest(void)
+void test_IsPatientPresent(void)
 {
-	int *a = (int*) malloc(sizeof(int));
-    TEST_ASSERT_EQUAL(1, 1); 
-	*a = 666;
+    char johnDoe[MAX_PATIENTNAME_SIZE] = "JohnDoe";
+    char janeDoe[MAX_PATIENTNAME_SIZE] = "JaneDoe";
+
+    AddPatient(johnDoe);
+
+    // Test checking if a patient is present
+    TEST_ASSERT_EQUAL(0, IsPatientPresent(johnDoe));
+
+    // Test checking if a non-existent patient is present
+    TEST_ASSERT_EQUAL(-1, IsPatientPresent(janeDoe));
 }
 
-void test_OutOfRangeTest(void)
+void test_AddPatientDose(void)
 {
-	int array[10];
-	
-	array[10] = 666;
-	(void)array;
+    char johnDoe[MAX_PATIENTNAME_SIZE] = "JohnDoe";
+    char janeDoe[MAX_PATIENTNAME_SIZE] = "JaneDoe";
+    Date date = {15, 6, 2023};
+
+    AddPatient(johnDoe);
+
+    // Test adding a dose to an existing patient
+    TEST_ASSERT_EQUAL(0, AddPatientDose(johnDoe, &date, 100));
+
+    // Test adding a dose to a non-existent patient
+    TEST_ASSERT_EQUAL(-1, AddPatientDose(janeDoe, &date, 100));
 }
 
-// add here all your dose admin testcases, and call them in main!! Remove the given testcases
+void test_PatientDoseInPeriod(void)
+{
+    char johnDoe[MAX_PATIENTNAME_SIZE] = "JohnDoe";
+    Date date1 = {15, 6, 2023};
+    Date date2 = {20, 6, 2023};
+    Date startDate = {1, 6, 2023};
+    Date endDate = {30, 6, 2023};
+    uint32_t totalDose;
+
+    AddPatient(johnDoe);
+    AddPatientDose(johnDoe, &date1, 100);
+    AddPatientDose(johnDoe, &date2, 50);
+
+    // Test calculating the total dose for a patient within a specific date range
+    TEST_ASSERT_EQUAL(0, PatientDoseInPeriod(johnDoe, &startDate, &endDate, &totalDose));
+    TEST_ASSERT_EQUAL(150, totalDose);
+
+    // Test calculating the total dose for a non-existent patient
+    char janeDoe[MAX_PATIENTNAME_SIZE] = "JaneDoe";
+    TEST_ASSERT_EQUAL(-1, PatientDoseInPeriod(janeDoe, &startDate, &endDate, &totalDose));
+}
+
+void test_RemovePatient(void)
+{
+    char johnDoe[MAX_PATIENTNAME_SIZE] = "JohnDoe";
+    char janeDoe[MAX_PATIENTNAME_SIZE] = "JaneDoe";
+
+    AddPatient(johnDoe);
+
+    // Test removing an existing patient
+    TEST_ASSERT_EQUAL(0, RemovePatient(johnDoe));
+    TEST_ASSERT_EQUAL(-1, IsPatientPresent(johnDoe));
+
+    // Test removing a non-existent patient
+    TEST_ASSERT_EQUAL(-1, RemovePatient(janeDoe));
+}
+
+void test_GetNumberOfMeasurements(void)
+{
+    char johnDoe[MAX_PATIENTNAME_SIZE] = "JohnDoe";
+    char janeDoe[MAX_PATIENTNAME_SIZE] = "JaneDoe";
+    Date date1 = {15, 6, 2023};
+    Date date2 = {20, 6, 2023};
+    size_t numberOfMeasurements;
+
+    AddPatient(johnDoe);
+    AddPatientDose(johnDoe, &date1, 100);
+    AddPatientDose(johnDoe, &date2, 50);
+
+    // Test getting the number of measurements for an existing patient
+    TEST_ASSERT_EQUAL(0, GetNumberOfMeasurements(johnDoe, &numberOfMeasurements));
+    TEST_ASSERT_EQUAL(2, numberOfMeasurements);
+
+    // Test getting the number of measurements for a non-existent patient
+    TEST_ASSERT_EQUAL(-1, GetNumberOfMeasurements(janeDoe, &numberOfMeasurements));
+}
+
+void test_WriteToFile_ReadFromFile(void)
+{
+    char testFilePath[MAX_FILEPATH_LEGTH] = "test_file.txt";
+    char johnDoe[MAX_PATIENTNAME_SIZE] = "JohnDoe";
+    Date date1 = {15, 6, 2023};
+    Date date2 = {20, 6, 2023};
+
+    AddPatient(johnDoe);
+    AddPatientDose(johnDoe, &date1, 100);
+    AddPatientDose(johnDoe, &date2, 50);
+
+    // Test writing patient data to a file
+    TEST_ASSERT_EQUAL(0, WriteToFile(testFilePath));
+
+    // Clear the hash table
+    RemoveAllDataFromHashTable();
+
+    // Test reading patient data from a file
+    TEST_ASSERT_EQUAL(0, ReadFromFile(testFilePath));
+
+    // Verify the data was read correctly
+    uint32_t totalDose;
+    Date startDate = {1, 6, 2023};
+    Date endDate = {30, 6, 2023};
+    TEST_ASSERT_EQUAL(0, PatientDoseInPeriod(johnDoe, &startDate, &endDate, &totalDose));
+    TEST_ASSERT_EQUAL(150, totalDose);
+
+    // Clean up the test file
+    remove(testFilePath);
+}
 
 int main()
 {
     UnityBegin();
 
-    MY_RUN_TEST(test_FailTest);
-    MY_RUN_TEST(test_LeakTest);
-    MY_RUN_TEST(test_OutOfRangeTest);
+    MY_RUN_TEST(test_AddPatient);
+    MY_RUN_TEST(test_IsPatientPresent);
+    MY_RUN_TEST(test_AddPatientDose);
+    MY_RUN_TEST(test_PatientDoseInPeriod);
+    MY_RUN_TEST(test_RemovePatient);
+    MY_RUN_TEST(test_GetNumberOfMeasurements);
+    MY_RUN_TEST(test_WriteToFile_ReadFromFile);
 
     UnityEnd();
 }

@@ -78,6 +78,10 @@ int8_t AddPatient(char patientName[MAX_PATIENTNAME_SIZE]) {
 
     strcpy(p->name, patientName);
 
+    p->dose.amount = 0;
+    p->dose.date.day = 0;
+    p->dose.date.month = 0;
+    p->dose.date.year = 0;
     p->dose.next = NULL;
 
     p->next = patientList[index];
@@ -127,12 +131,17 @@ int8_t AddPatientDose(char patientName[MAX_PATIENTNAME_SIZE], Date* date, uint16
 
 void RemoveAllDoseData(DoseData *dose)
 {
-    while (dose != NULL)
+    if (dose == NULL) return;
+
+    DoseData *currentDose = dose->next;
+    while (currentDose != NULL)
     {
-        DoseData *nextNode = dose->next;
-        free(dose);
-        dose = nextNode;
+        DoseData *nextNode = currentDose->next;
+        free(currentDose);
+        currentDose = nextNode;
     }
+
+    dose->next = NULL;
 }
 
 // Brice: First discard the date -> then you test -> Then you check the date
@@ -164,7 +173,7 @@ int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
     }
 
     *totalDose = 0;
-    DoseData *currentDose = &p->dose;   
+    DoseData *currentDose = p->dose.next;
 
     if (currentDose == NULL) return 0;
 
@@ -180,8 +189,8 @@ int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
     return 0;
 }
 
-int8_t RemovePatient(char patientName[MAX_PATIENTNAME_SIZE]) {
-    
+int8_t RemovePatient(char patientName[MAX_PATIENTNAME_SIZE])
+{
     if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
     {
         return -2;
@@ -192,25 +201,24 @@ int8_t RemovePatient(char patientName[MAX_PATIENTNAME_SIZE]) {
         return -1;
     }
 
-    // Brice: solve warnings
     uint8_t index = hashFunction(patientName);
     Patient *current = patientList[index];
     Patient *previous = NULL;
 
-    while (true) // Brice: make a unit test
+    while (current != NULL)
     {
         if (strcmp(current->name, patientName) == 0)
         {
             if (previous == NULL)
             {
                 patientList[index] = current->next;
-                RemoveAllDoseData(current->dose.next); // Brice: use array for Dose may be easier
-                free(current);
-                return 0;
+            }
+            else
+            {
+                previous->next = current->next;
             }
 
-            previous->next = current->next;
-            RemoveAllDoseData(current->dose.next);
+            RemoveAllDoseData(&current->dose);
             free(current);
             return 0;
         }
@@ -218,6 +226,7 @@ int8_t RemovePatient(char patientName[MAX_PATIENTNAME_SIZE]) {
         current = current->next;
     }
 
+    return -1;
 }
 
 int8_t IsPatientPresent(char patientName[MAX_PATIENTNAME_SIZE]) {
@@ -268,7 +277,7 @@ int8_t GetNumberOfMeasurements(char patientName[MAX_PATIENTNAME_SIZE], size_t* n
 
     size_t count = 0;
 
-    DoseData *currentDose = &p->dose;
+    DoseData *currentDose = p->dose.next;
 
     while (currentDose != NULL)
     {
@@ -308,7 +317,7 @@ int8_t WriteToFile(char filePath[MAX_FILEPATH_LEGTH])
             fprintf(file, "%s\n", current->name);
 
             // Write dose data
-            DoseData *currentDose = &current->dose;
+            DoseData *currentDose = current->dose.next;
             while (currentDose != NULL)
             {
                 fprintf(file, "%d %d %d %d\n", currentDose->amount, currentDose->date.day, currentDose->date.month, currentDose->date.year);
@@ -326,20 +335,16 @@ int8_t WriteToFile(char filePath[MAX_FILEPATH_LEGTH])
     return 0;
 }
 
-int8_t ReadFromFile(char filePath[MAX_FILEPATH_LEGTH])
-{
+int8_t ReadFromFile(char filePath[MAX_FILEPATH_LEGTH]) {
     FILE *file = fopen(filePath, "r");
-    if (file == NULL)
-    {
+    if (file == NULL) {
         return -1; // Failed to open file
     }
 
     char patientName[MAX_PATIENTNAME_SIZE];
-    while (fscanf(file, "%79s", patientName) == 1)
-    {
+    while (fscanf(file, " %79[^\n]", patientName) == 1) {
         // Add patient to hash table
-        if (AddPatient(patientName) != 0)
-        {
+        if (AddPatient(patientName) != 0) {
             fclose(file);
             return -1; // Failed to add patient
         }
@@ -349,19 +354,21 @@ int8_t ReadFromFile(char filePath[MAX_FILEPATH_LEGTH])
         uint16_t year;
         char endDoseMarker[10];
 
-        // Read dose data until "END_DOSE" is encountered
-        while (fscanf(file, "%hhu %hhu %hhu %hu", &amount, &day, &month, &year) == 4)
-        {
-            Date date = {day, month, year};
-            if (AddPatientDose(patientName, &date, amount) != 0)
-            {
-                fclose(file);
-                return -1; // Failed to add dose data
+        while (true) {
+            // Try to read dose data
+            if (fscanf(file, " %hhu %hhu %hhu %hu", &amount, &day, &month, &year) == 4) {
+                Date date = {day, month, year};
+                if (AddPatientDose(patientName, &date, amount) != 0) {
+                    fclose(file);
+                    return -1; // Failed to add dose data
+                }
             }
-
-            // Check for end of dose data marker
-            if (fscanf(file, "%9s", endDoseMarker) == 1 && strcmp(endDoseMarker, "END_DOSE") == 0)
-            {
+            // Try to read the end marker
+            else if (fscanf(file, " %9s", endDoseMarker) == 1 && strcmp(endDoseMarker, "END_DOSE") == 0) {
+                break;
+            }
+            // If neither succeeds, there might be an error or end of file
+            else {
                 break;
             }
         }
