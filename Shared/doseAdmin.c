@@ -314,6 +314,10 @@ int8_t WriteToFile(char filePath[MAX_FILEPATH_LEGTH])
                 fprintf(file, "%d %d %d %d\n", currentDose->amount, currentDose->date.day, currentDose->date.month, currentDose->date.year);
                 currentDose = currentDose->next;
             }
+
+            // Marker to indicate end of dose data for this patient
+            fprintf(file, "END_DOSE\n");
+
             current = current->next;
         }
     }
