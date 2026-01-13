@@ -36,6 +36,13 @@ typedef enum {
     STATE_CONNECTED    // probably in the future this state will have substates!!
 } CENTRAL_ACQ_STATES;
 
+typedef enum {
+    SUBSTATE_IDLE,
+    SUBSTATE_PREPARING,
+    SUBSTATE_PREPARED,
+    SUBSTATE_ACQUIRING
+} CONNECTED_SUBSTATES;
+
 void handleEvent(EVENTS event)
 {
     static CENTRAL_ACQ_STATES centralAcqState = STATE_DISCONNECTED;
