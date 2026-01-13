@@ -14,7 +14,11 @@ static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
 bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE]);
 
 void setup() {
-  Serial.begin(9600);
+  	Serial.begin(9600);
+	pinMode(PIN_BTN_PREPARE, INPUT); // or INPUT_PULLUP if using internal resistors
+  	pinMode(PIN_BTN_XRAY, INPUT);
+  	pinMode(PIN_LED_PREPARED, OUTPUT);
+  	pinMode(PIN_LED_ACQUIRING, OUTPUT);
 }
 
 void loop() {
@@ -31,6 +35,13 @@ void loop() {
     }
 }
 
+// --- Hardware Definitions ---
+#define PIN_BTN_PREPARE   2
+#define PIN_BTN_XRAY      3
+#define PIN_LED_PREPARED  4
+#define PIN_LED_ACQUIRING 5
+
+// --- State Definitions ---
 typedef enum {
     STATE_DISCONNECTED,
     STATE_CONNECTED    // probably in the future this state will have substates!!
@@ -43,20 +54,26 @@ typedef enum {
     SUBSTATE_ACQUIRING
 } CONNECTED_SUBSTATES;
 
+// --- Global State Variables ---
+static CENTRAL_ACQ_STATES centralAcqState = STATE_DISCONNECTED;
+static CONNECTED_SUBSTATES connectedSubState = SUBSTATE_IDLE;
+
 void handleEvent(EVENTS event)
 {
-    static CENTRAL_ACQ_STATES centralAcqState = STATE_DISCONNECTED;
 
     switch (centralAcqState) {
     case STATE_DISCONNECTED:
         if (event == EV_CONNECT_MSG_RECEIVED) {
             centralAcqState = STATE_CONNECTED;
+			connectedSubState = SUBSTATE_IDLE;
             writeMsgToSerialPort(CONNECT_MSG);
         }
         break;
     case STATE_CONNECTED:
         if (event == EV_DISCONNECT_MSG_RECEIVED) {
             centralAcqState = STATE_DISCONNECTED;
+			digitalWrite(PIN_LED_PREPARED, LOW);
+            digitalWrite(PIN_LED_ACQUIRING, LOW);
             writeMsgToSerialPort(DISCONNECT_MSG);
         }
         break;
