@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 			case MO_QUIT:
 				RemovePatient("JohnDoe");
 
-				if (WriteToFile("patient_data.txt") == 0) {
+				if (WriteToFile((char[MAX_FILEPATH_LEGTH]){"patient_data.txt"}) == 0) {
 					printf("Patient data successfully saved to 'patient_data.txt'.\n");
 				} else {
 					printf("Error: Failed to save patient data.\n");

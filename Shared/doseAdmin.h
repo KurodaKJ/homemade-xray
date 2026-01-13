@@ -49,7 +49,7 @@ void RemoveAllDataFromHashTable();
  * 
  * It is a precondition that patientName is not NULL and is \0 terminated
  */
-int8_t AddPatient(char patientName[MAX_PATIENTNAME_SIZE]);
+int8_t AddPatient(char *patientName);
 
 
 /***************************************************************************************
@@ -96,7 +96,7 @@ int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
  * 
  * It is a precondition that patientName is not NULL and is \0 terminated
  */
-int8_t RemovePatient(char patientName[MAX_PATIENTNAME_SIZE]);
+int8_t RemovePatient(char *patientName);
 
 
 /***************************************************************************************

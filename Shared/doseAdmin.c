@@ -54,7 +54,7 @@ void RemoveAllDataFromHashTable() {
 
 // Add a patient to the hash table
 // Brice: make unit tests!
-int8_t AddPatient(char patientName[MAX_PATIENTNAME_SIZE]) {
+int8_t AddPatient(char *patientName) {
 
     if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
     {
@@ -189,7 +189,7 @@ int8_t PatientDoseInPeriod(char patientName[MAX_PATIENTNAME_SIZE],
     return 0;
 }
 
-int8_t RemovePatient(char patientName[MAX_PATIENTNAME_SIZE])
+int8_t RemovePatient(char *patientName)
 {
     if (strlen(patientName) >= MAX_PATIENTNAME_SIZE)
     {
