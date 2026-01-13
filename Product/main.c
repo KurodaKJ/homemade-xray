@@ -2,6 +2,7 @@
 #include "menu.h"
 #include <fcntl.h>
 #include <string.h>
+#include <time.h>
 
 #include "doseAdmin.h"
 #include "CentralAcquisitionProxy.h"
@@ -36,7 +37,21 @@ int main(int argc, char* argv[])
 			if (centralAcqConnectionState == CONNECTED_WITH_CENTRAL_ACQUISITION) {
 				uint32_t doseData;
 				if (getDoseDataFromCentralAcquisition(&doseData)) {
-					printf("Received dose: %d\n", doseData); // instead of this print call here the function that handles the received dose datawqt
+					time_t t = time(NULL);
+					struct tm tm = *localtime(&t);
+
+					Date currentDate;
+					currentDate.day = tm.tm_mday;
+					currentDate.month = tm.tm_mon + 1;    // tm_mon is 0-11
+					currentDate.year = tm.tm_year + 1900; // tm_year is years since 1900
+
+					int8_t result = AddPatientDose(selectedPatient, &currentDate, (uint16_t)doseData);
+
+					if (result == 0) {
+						printf("Received dose: %d. Successfully added to patient '%s'.\n", doseData, selectedPatient);
+					} else {
+						printf("Received dose: %d, but failed to add to patient (Error Code: %d).\n", doseData, result);
+					}
 				}
 			}
 		}
