@@ -26,6 +26,12 @@ int main(int argc, char* argv[])
 	}
 	
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);   //non blocking standard input
+
+	if (ReadFromFile((char[MAX_FILEPATH_LEGTH]){"patient_data.txt"}) == 0) {
+		printf("Restored patient data from 'patient_data.txt'.\n");
+	} else {
+		printf("No previous data found (or failed to read). Starting fresh.\n");
+	}
 	 
 	char selectedPatient[MAX_PATIENTNAME_SIZE] = "JohnDoe";
 	AddPatient(selectedPatient);
