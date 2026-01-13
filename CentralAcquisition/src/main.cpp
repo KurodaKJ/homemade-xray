@@ -8,8 +8,8 @@ typedef enum {
 	EV_NONE
 } EVENTS;
 
-EVENTS getEvent();
-void handleEvent(EVENTS event);
+static EVENTS getEvent();
+static void handleEvent(EVENTS event);
 static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
 bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE]);
 

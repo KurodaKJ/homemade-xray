@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "menu.h"
 #include <fcntl.h>
+#include <string.h>
+
 #include "doseAdmin.h"
 #include "CentralAcquisitionProxy.h"
 
@@ -25,8 +27,7 @@ int main(int argc, char* argv[])
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);   //non blocking standard input
 	 
 	char selectedPatient[MAX_PATIENTNAME_SIZE] = "JohnDoe";
-	(void) selectedPatient; // remove this line when you are doing something with selectedPatient
-	// add here the code that adds John Doe into the admin
+	AddPatient(selectedPatient);
 	
 	displayMenu();	
 	while (true) {  
@@ -43,27 +44,43 @@ int main(int argc, char* argv[])
 			switch (choice)
 			{
 			case MO_ADD_PATIENT:
-				// add here your add patient code
+				printf("Enter the name of the patient to add: ");
+				scanf("%79s", selectedPatient);
+
+				if (AddPatient(selectedPatient) == 0) {
+					printf("Patient added successfully.\n");
+				} else {
+					printf("Failed to add patient.\n");
+				}
+
+				// Clear the input buffer to remove the newline character
+				while (getchar() != '\n');
 				break;
 			case MO_DELETE_PATIENT:
-				// add here your delete patient code
+				if (strlen(selectedPatient) > 0) {
+					if (RemovePatient(selectedPatient) == 0) {
+						printf("Patient removed successfully.\n");
+					} else {
+						printf("Failed to remove patient.\n");
+					}
+				} else {
+					printf("No patient selected.\n");
+				}
 				break;
 			case MO_SELECT_PATIENT:
 				// add here your select patient code
 				break;
 			case MO_SELECT_EXAMINATION_TYPE:
-			    if (centralAcqConnectionState == CONNECTED_WITH_CENTRAL_ACQUISITION) {	
-					// add here your select examination code
-				}
-				else {
+				if (centralAcqConnectionState != CONNECTED_WITH_CENTRAL_ACQUISITION) {
 					printf("This option is only valid when connected with CentralAcquisition\n");
+					break;
 				}
+				// add here your select examination code
 				break;
 			case MO_QUIT:
 				disconnectFromCentralAcquisition();
 				centralAcqConnectionState = NOT_CONNECTED_WITH_CENTRAL_ACQUISITION;
 				return 0;
-				break;
 			default:
 				printf("Please, enter a valid number! %d\n", choice);
 				break;

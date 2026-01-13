@@ -3,9 +3,26 @@
 #include <stdint.h>
 #include <stddef.h>
 
-
 #define MAX_PATIENTNAME_SIZE	(80)
 #define HASHTABLE_SIZE			(256)
+
+typedef struct {
+	uint8_t   day;    // value in range [1, 31]
+	uint8_t   month;  // value in range [1, 12]
+	uint16_t  year;   // value in range [1900, 2500]
+} Date;
+
+typedef struct doseData {
+	uint8_t					   amount;
+	Date						 date;
+    struct    doseData          *next;
+} DoseData;
+
+typedef struct patient {
+	char        name[MAX_PATIENTNAME_SIZE];
+	DoseData						  dose;
+    struct      patient              *next;
+} Patient;
 
 
 /*************************************************************************************** 
@@ -15,8 +32,8 @@
 void CreateHashTable(); 
 					   
 
-/***************************************************************************************
- * Removes all patient data from the hash table
+/*********************************************************:******************************
+ * Removes all patient data from the hash table:
  * 
  */
 void RemoveAllDataFromHashTable();
@@ -35,12 +52,6 @@ void RemoveAllDataFromHashTable();
 int8_t AddPatient(char patientName[MAX_PATIENTNAME_SIZE]);
 
 
-typedef struct {
-	uint8_t   day;    // value in range [1, 31]
-	uint8_t   month;  // value in range [1, 12]
-	uint16_t  year;   // value in range [1900, 2500]
-} Date;
-
 /***************************************************************************************
  * Adds the dose a patient received during an examination at a particular date in 
  * the hash table
@@ -57,6 +68,10 @@ typedef struct {
 int8_t AddPatientDose(char patientName[MAX_PATIENTNAME_SIZE], Date* date, 
                       uint16_t dose);
 
+/***************************************************************************************
+ * Remove dose data linked list
+ */
+void RemoveAllDoseData(DoseData *dose);
 
 /***************************************************************************************
  * Returns the total dose a patient received in passed period.
@@ -106,7 +121,7 @@ int8_t IsPatientPresent(char patientName[MAX_PATIENTNAME_SIZE]);
  * It is a precondition that patientName is not NULL and is \0 terminated
  */
 int8_t GetNumberOfMeasurements(char patientName[MAX_PATIENTNAME_SIZE], 
-                               size_t * nrOfMeasurements);
+                               size_t * numberOfMeasurements);
 
 
 /***************************************************************************************
