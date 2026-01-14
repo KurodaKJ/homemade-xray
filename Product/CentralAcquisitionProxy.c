@@ -54,15 +54,25 @@ bool disconnectFromCentralAcquisition()
 
 void selectExaminationType(const EXAMINATION_TYPES examination) 
 {
-	(void) examination; // remove this line as soon as you are doing something with the argument
-	return;
+	char msg[MAX_MSG_SIZE];
+	// Format the message: "EXAM:" followed by the integer value of the enum
+	sprintf(msg, "EXAM:%d", (int)examination);
+
+	// Send it to the Arduino
+	writeMsgToSerialPort(msg);
+	printf("Sent examination type: %s\n", msg);
 }
 
 bool getDoseDataFromCentralAcquisition(uint32_t * doseData)
 {
 	char msg[MAX_MSG_SIZE];
 	if (getMsgFromCentralAcquisition(msg)) {
-		*doseData = 666;// remove this line as soon as you are really doing something with msg
+		int parsedValue = 0;
+
+		if (sscanf(msg + 5, "%d", &parsedValue) == 1) {
+			*doseData = (uint32_t)parsedValue;
+			return true; // Successfully parsed dose
+		}
 		return true;
 	}
 	return false;
