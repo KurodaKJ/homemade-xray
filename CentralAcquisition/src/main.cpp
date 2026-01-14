@@ -2,38 +2,6 @@
 #include "../../Interface_PatAdmin_CentralAcq/Protocol_PatientAdmin_CentralAcq.h"
 #include <string.h>
 
-typedef enum {
-	EV_CONNECT_MSG_RECEIVED, 
-	EV_DISCONNECT_MSG_RECEIVED, 
-	EV_NONE
-} EVENTS;
-
-static EVENTS getEvent();
-static void handleEvent(EVENTS event);
-static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
-bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE]);
-
-void setup() {
-  	Serial.begin(9600);
-	pinMode(PIN_BTN_PREPARE, INPUT); // or INPUT_PULLUP if using internal resistors
-  	pinMode(PIN_BTN_XRAY, INPUT);
-  	pinMode(PIN_LED_PREPARED, OUTPUT);
-  	pinMode(PIN_LED_ACQUIRING, OUTPUT);
-}
-
-void loop() {
-    handleEvent(getEvent());
-
-    //below some dummy code that sends dose data to the patient admin. Remove this dummy code asap.
-    static unsigned long timeOut = millis();
-    static int doseCnt = 0;
-    unsigned long curTime = millis();
-    if (curTime > timeOut) {
-        Serial.print("$dose:"); Serial.print(doseCnt); Serial.println("#");
-        timeOut = curTime + 5000;
-        doseCnt++;
-    }
-}
 
 // --- Hardware Definitions ---
 #define PIN_BTN_PREPARE   2
@@ -57,6 +25,88 @@ typedef enum {
 // --- Global State Variables ---
 static CENTRAL_ACQ_STATES centralAcqState = STATE_DISCONNECTED;
 static CONNECTED_SUBSTATES connectedSubState = SUBSTATE_IDLE;
+
+// --- Protocol Events ---
+typedef enum {
+	EV_CONNECT_MSG_RECEIVED, 
+	EV_DISCONNECT_MSG_RECEIVED, 
+	EV_NONE
+} EVENTS;
+
+static EVENTS getEvent();
+static void handleEvent(EVENTS event);
+static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
+bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE]);
+
+// Helper to simulate checking slaves ( Will be replace with I2C later)
+bool areSlavesPrepared() {
+    return true;
+}
+
+void runConnectedStateMachine() {
+    static unsigned long preparingTimer = 0;
+
+    switch (connectedSubState) {
+        case SUBSTATE_IDLE:
+            // If Prepare button pressed (and we are connected)
+            if (digitalRead(PIN_BTN_PREPARE) == HIGH) {
+                // TODO: Send "Prepare" to slaves
+                preparingTimer = millis();
+                connectedSubState = SUBSTATE_PREPARING;
+                Serial.println("State: IDLE -> PREPARING");
+            }
+            break;
+
+        case SUBSTATE_PREPARING:
+            // Check if slaves are ready or timeout
+            if (areSlavesPrepared()) {
+                connectedSubState = SUBSTATE_PREPARED;
+                digitalWrite(PIN_LED_PREPARED, HIGH);
+                Serial.println("State: PREPARING -> PREPARED");
+            }
+            else if (millis() - preparingTimer > 1000) {
+                connectedSubState = SUBSTATE_IDLE;
+                Serial.println("State: PREPARING -> IDLE (Timeout)");
+            }
+            break;
+
+        case SUBSTATE_PREPARED:
+            // If Xray button pressed
+            if (digitalRead(PIN_BTN_XRAY) == HIGH) {
+                connectedSubState = SUBSTATE_ACQUIRING;
+                digitalWrite(PIN_LED_PREPARED, LOW);
+                digitalWrite(PIN_LED_ACQUIRING, HIGH);
+                Serial.println("State: PREPARED -> ACQUIRING");
+            }
+            break;
+
+        case SUBSTATE_ACQUIRING:
+            // If Xray button released
+            if (digitalRead(PIN_BTN_XRAY) == LOW) {
+                digitalWrite(PIN_LED_ACQUIRING, LOW);
+                connectedSubState = SUBSTATE_IDLE;
+                Serial.println("State: ACQUIRING -> IDLE");
+            }
+            break;
+    }
+}
+
+void setup() {
+  	Serial.begin(9600);
+	pinMode(PIN_BTN_PREPARE, INPUT); // or INPUT_PULLUP if using internal resistors
+  	pinMode(PIN_BTN_XRAY, INPUT);
+  	pinMode(PIN_LED_PREPARED, OUTPUT);
+  	pinMode(PIN_LED_ACQUIRING, OUTPUT);
+}
+
+void loop() {
+    handleEvent(getEvent());
+
+    // 2. Run Application Logic if Connected
+    if (centralAcqState == STATE_CONNECTED) {
+        runConnectedStateMachine();
+    }
+}
 
 void handleEvent(EVENTS event)
 {
