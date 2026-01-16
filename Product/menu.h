@@ -11,6 +11,6 @@ typedef enum {
 
 MenuOptions getMenuChoice(void);
 void displayMenu();
-
+int getInt(void);
 
 #endif

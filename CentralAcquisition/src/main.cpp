@@ -38,8 +38,9 @@ static CONNECTED_SUBSTATES connectedSubState = SUBSTATE_IDLE;
 
 // --- Protocol Events ---
 typedef enum {
-	EV_CONNECT_MSG_RECEIVED, 
-	EV_DISCONNECT_MSG_RECEIVED, 
+	EV_CONNECT_MSG_RECEIVED,
+	EV_DISCONNECT_MSG_RECEIVED,
+	EV_EXAM_MSG_RECEIVED,
 	EV_NONE
 } EVENTS;
 
@@ -64,7 +65,7 @@ bool isSlaveReady(uint8_t address) {
     return false;
 }
 
-void runConnectedStateMachine() {
+void runConnectedStateMachine(EVENTS event) {
     static unsigned long preparingTimer = 0;
 
     switch (connectedSubState) {
@@ -72,7 +73,7 @@ void runConnectedStateMachine() {
 			digitalWrite(PIN_SAN_ENABLE, LOW); // Ensure Safety is OFF
 
             // If Prepare button pressed (and we are connected)
-            if (digitalRead(PIN_BTN_PREPARE) == LOW) {
+            if (digitalRead(PIN_BTN_PREPARE) == LOW || event == EV_EXAM_MSG_RECEIVED) {
                 // Send prepare command to slaves
                 sendCommand(ADDR_GEOMETRY, CMD_PREPARE);
 				sendCommand(ADDR_XRAY, CMD_PREPARE);
@@ -141,11 +142,12 @@ void setup() {
 }
 
 void loop() {
-    handleEvent(getEvent());
+	EVENTS event = getEvent();
+    handleEvent(event);
 
     // 2. Run Application Logic if Connected
     if (centralAcqState == STATE_CONNECTED) {
-        runConnectedStateMachine();
+        runConnectedStateMachine(event);
     }
 
 	delay(10); // Small delay to keep loop from running too fast
@@ -175,7 +177,7 @@ void handleEvent(EVENTS event)
     }
 }
 
-EVENTS getEvent() 
+EVENTS getEvent()
 {
     char msg[MAX_MSG_SIZE];
     if (checkForMsgOnSerialPort(msg)) {
@@ -197,7 +199,7 @@ static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE])
 }
 
 typedef enum {
-	WAITING_FOR_MSG_START_SYMBOL, 
+	WAITING_FOR_MSG_START_SYMBOL,
 	WAITING_FOR_MSG_END_SYMBOL
 } MSG_RECEIVE_STATE;
 
@@ -208,7 +210,7 @@ bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE])
     static char msg[MAX_MSG_SIZE] {0};
 
     if (Serial.available() > 0) {
-        char receivedChar = Serial.read(); 
+        char receivedChar = Serial.read();
 		switch (msgRcvState) {
 			case WAITING_FOR_MSG_START_SYMBOL:
 				if (receivedChar == MSG_START_SYMBOL) {
@@ -220,7 +222,7 @@ bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE])
 				if (receivedChar == MSG_END_SYMBOL) {
 					msg[receiveIndex] = '\0';
                     receiveIndex = 0;
-                    strncpy(msgArg, msg, MAX_MSG_SIZE);  
+                    strncpy(msgArg, msg, MAX_MSG_SIZE);
 					msgRcvState = WAITING_FOR_MSG_START_SYMBOL;
 					return true;
 				}

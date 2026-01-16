@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 		printf("\n\nConnecting with CentralAcquisition Failed. No problem, you can continue with \n");
 		printf("the functionality that does not depend on that connection!\n");
 	}
-	
+
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);   //non blocking standard input
 
 	if (ReadFromFile((char[MAX_FILEPATH_LEGTH]){"patient_data.txt"}) == 0) {
@@ -96,7 +96,32 @@ int main(int argc, char* argv[])
 					printf("This option is only valid when connected with CentralAcquisition\n");
 					break;
 				}
-				// add here your select examination code
+
+				printf("\nSelect Examination Type:\n");
+				printf("  [0] Single Shot\n");
+				printf("  [1] Series\n");
+				printf("  [2] Series with Motion\n");
+				printf("  [3] Fluoro\n");
+				printf("Choice: ");
+
+				// 1. Turn OFF Non-Blocking (Make it wait for you)
+				int flags = fcntl(0, F_GETFL);
+				fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
+
+				int examChoice = getInt();
+
+				// 3. Turn Non-Blocking BACK ON (For the main menu loop)
+				fcntl(0, F_SETFL, flags | O_NONBLOCK);
+
+				// Check if input is valid (0-3)
+				if (examChoice >= 0 && examChoice <= 3) {
+					// Send the command to Arduino
+					selectExaminationType((EXAMINATION_TYPES)examChoice);
+					printf("Command sent! Check the Master Arduino...\n");
+				} else {
+					printf("Invalid selection.\n");
+				}
+				// --- NEW CODE END ---
 				break;
 			case MO_QUIT:
 				RemovePatient("JohnDoe");
