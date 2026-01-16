@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include "../../Interface_PatAdmin_CentralAcq/Protocol_PatientAdmin_CentralAcq.h"
 #include <string.h>
 
@@ -8,6 +9,15 @@
 #define PIN_BTN_XRAY      3
 #define PIN_LED_PREPARED  4
 #define PIN_LED_ACQUIRING 5
+#define PIN_SAN_ENABLE    6
+
+// --- I2C Addresses & Commands ---
+#define ADDR_GEOMETRY     0x08
+#define ADDR_XRAY         0x09
+
+#define CMD_IDLE          0
+#define CMD_PREPARE       1
+#define CMD_PULSE         2
 
 // --- State Definitions ---
 typedef enum {
@@ -38,9 +48,20 @@ static void handleEvent(EVENTS event);
 static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
 bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE]);
 
-// Helper to simulate checking slaves ( Will be replace with I2C later)
-bool areSlavesPrepared() {
-    return true;
+// Send a command to a specific slave
+void sendCommand(uint8_t address, uint8_t cmd) {
+    Wire.beginTransmission(address);
+    Wire.write(cmd);
+    Wire.endTransmission();
+}
+
+// Check if a slave is ready (Read 1 byte)
+bool isSlaveReady(uint8_t address) {
+    Wire.requestFrom(address, (uint8_t)1);
+    if (Wire.available()) {
+        return Wire.read() == 1; // 1 = Ready
+    }
+    return false;
 }
 
 void runConnectedStateMachine() {
@@ -48,9 +69,14 @@ void runConnectedStateMachine() {
 
     switch (connectedSubState) {
         case SUBSTATE_IDLE:
+			digitalWrite(PIN_SAN_ENABLE, LOW); // Ensure Safety is OFF
+
             // If Prepare button pressed (and we are connected)
-            if (digitalRead(PIN_BTN_PREPARE) == HIGH) {
-                // TODO: Send "Prepare" to slaves
+            if (digitalRead(PIN_BTN_PREPARE) == LOW) {
+                // Send prepare command to slaves
+                sendCommand(ADDR_GEOMETRY, CMD_PREPARE);
+				sendCommand(ADDR_XRAY, CMD_PREPARE);
+
                 preparingTimer = millis();
                 connectedSubState = SUBSTATE_PREPARING;
                 Serial.println("State: IDLE -> PREPARING");
@@ -59,12 +85,14 @@ void runConnectedStateMachine() {
 
         case SUBSTATE_PREPARING:
             // Check if slaves are ready or timeout
-            if (areSlavesPrepared()) {
+            if (isSlaveReady(ADDR_GEOMETRY) && isSlaveReady(ADDR_XRAY)) {
                 connectedSubState = SUBSTATE_PREPARED;
                 digitalWrite(PIN_LED_PREPARED, HIGH);
                 Serial.println("State: PREPARING -> PREPARED");
             }
-            else if (millis() - preparingTimer > 1000) {
+            else if (millis() - preparingTimer > 5000) {
+				sendCommand(ADDR_GEOMETRY, CMD_IDLE);
+                sendCommand(ADDR_XRAY, CMD_IDLE);
                 connectedSubState = SUBSTATE_IDLE;
                 Serial.println("State: PREPARING -> IDLE (Timeout)");
             }
@@ -72,19 +100,27 @@ void runConnectedStateMachine() {
 
         case SUBSTATE_PREPARED:
             // If Xray button pressed
-            if (digitalRead(PIN_BTN_XRAY) == HIGH) {
+            if (digitalRead(PIN_BTN_XRAY) == LOW) {
                 connectedSubState = SUBSTATE_ACQUIRING;
                 digitalWrite(PIN_LED_PREPARED, LOW);
                 digitalWrite(PIN_LED_ACQUIRING, HIGH);
+
+                digitalWrite(PIN_SAN_ENABLE, HIGH); // Enable Safety (Allow Xray)
+				sendCommand(ADDR_XRAY, CMD_PULSE);
                 Serial.println("State: PREPARED -> ACQUIRING");
             }
             break;
 
         case SUBSTATE_ACQUIRING:
             // If Xray button released
-            if (digitalRead(PIN_BTN_XRAY) == LOW) {
+            if (digitalRead(PIN_BTN_XRAY) == HIGH) {
                 digitalWrite(PIN_LED_ACQUIRING, LOW);
-                connectedSubState = SUBSTATE_IDLE;
+				digitalWrite(PIN_SAN_ENABLE, LOW); // Disable Safety (Stop Xray)
+
+				sendCommand(ADDR_GEOMETRY, CMD_IDLE);
+                sendCommand(ADDR_XRAY, CMD_IDLE);
+
+				connectedSubState = SUBSTATE_IDLE;
                 Serial.println("State: ACQUIRING -> IDLE");
             }
             break;
@@ -93,10 +129,15 @@ void runConnectedStateMachine() {
 
 void setup() {
   	Serial.begin(9600);
-	pinMode(PIN_BTN_PREPARE, INPUT); // or INPUT_PULLUP if using internal resistors
-  	pinMode(PIN_BTN_XRAY, INPUT);
+	Wire.begin();
+	pinMode(PIN_BTN_PREPARE, INPUT_PULLUP);
+  	pinMode(PIN_BTN_XRAY, INPUT_PULLUP);
+
   	pinMode(PIN_LED_PREPARED, OUTPUT);
   	pinMode(PIN_LED_ACQUIRING, OUTPUT);
+	pinMode(PIN_SAN_ENABLE, OUTPUT);
+
+    digitalWrite(PIN_SAN_ENABLE, LOW); // Disable SAN by default
 }
 
 void loop() {
@@ -106,6 +147,8 @@ void loop() {
     if (centralAcqState == STATE_CONNECTED) {
         runConnectedStateMachine();
     }
+
+	delay(10); // Small delay to keep loop from running too fast
 }
 
 void handleEvent(EVENTS event)
