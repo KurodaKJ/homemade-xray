@@ -15,6 +15,7 @@
 #define CMD_IDLE          0
 #define CMD_PREPARE       1
 #define CMD_PULSE         2
+#define CMD_READ_DOSE     3
 
 // States
 typedef enum { 

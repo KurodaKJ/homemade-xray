@@ -9,19 +9,28 @@
 
 volatile int command = 0;
 volatile bool newData = false;
+volatile unsigned long totalDose = 0;
 
 void receiveEvent(int howMany) {
     if (Wire.available()) {
         command = Wire.read();
-        newData = true;
+
+        if (command == 1) {
+            totalDose = 0;
+        }
     }
 }
 
 void requestEvent() {
-    if (command >= 1) {
+    // Master want dose
+    if (command == 3) {
+        Wire.write((uint8_t*)&totalDose, 4);
+    }
+    // Standard status check
+    else if (command >= 1) {
         Wire.write(1);
     } else {
-         Wire.write(0);
+        Wire.write(0);
     }
 }
 
@@ -43,7 +52,7 @@ void loop() {
     bool geoSafe    = (digitalRead(PIN_SAN_GEO) == HIGH);
     int doseLevel   = analogRead(PIN_LDR);
 
-    // PRINT NEW COMMANDS
+    // Print received command
     if (newData) {
         Serial.print("RX CMD: "); Serial.print(command);
         Serial.print(" | SafeM: "); Serial.print(masterSafe);
@@ -53,7 +62,9 @@ void loop() {
 
     if (command == 2 && masterSafe && geoSafe) {
         digitalWrite(PIN_XRAY_LED, HIGH);
+        totalDose += doseLevel;
         Serial.print("FIRING! Dose: "); Serial.println(doseLevel);
+        delay(10);
     } else {
         digitalWrite(PIN_XRAY_LED, LOW);
     }

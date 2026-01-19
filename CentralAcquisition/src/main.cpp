@@ -71,6 +71,20 @@ void runConnectedStateMachine(EVENTS event) {
                 sendCommand(ADDR_GEOMETRY, CMD_IDLE);
                 sendCommand(ADDR_XRAY, CMD_IDLE);
 
+                Serial.println(">>> LOGIC: Retrieving Dose...");
+                sendCommand(ADDR_XRAY, CMD_READ_DOSE);
+                Wire.requestFrom(ADDR_XRAY, 4);
+                unsigned long dose = 0;
+                if (Wire.available() == 4) {
+                    Wire.readBytes((char*)&dose, 4);
+                }
+
+                char doseMsg[32];
+                sprintf(doseMsg, "DOSE:%lu", dose);
+                writeMsgToSerialPort(doseMsg);
+
+                Serial.print(">>> TX PC: "); Serial.println(doseMsg);
+
                 connectedSubState = SUBSTATE_IDLE;
                 Serial.println(">>> STATE: ACQUIRING -> IDLE");
             }
@@ -140,7 +154,7 @@ EVENTS getEvent() {
 			return EV_DISCONNECT;
 		}
 
-        if (strncmp(msg, "EXAM", 4) == 0) {
+        if (strncmp(msg, EXAMINATION_MSG, 4) == 0) {
 			return EV_EXAM;
 		}
     }
