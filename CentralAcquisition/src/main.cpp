@@ -2,31 +2,13 @@
 #include <Wire.h>
 #include <string.h>
 #include "Protocol_PatientAdmin_CentralAcq.h"
+#include "config.h"
 
-// --- PINS ---
-#define PIN_BTN_PREPARE   2
-#define PIN_BTN_XRAY      3
-#define PIN_LED_PREPARED  4
-#define PIN_LED_ACQUIRING 5
-#define PIN_SAN_ENABLE    6   // Safety Hub
-
-// --- I2C ---
-#define ADDR_GEOMETRY     0x08
-#define ADDR_XRAY         0x09
-#define CMD_IDLE          0
-#define CMD_PREPARE       1
-#define CMD_PULSE         2
-
-// --- STATES ---
-typedef enum { STATE_DISCONNECTED, STATE_CONNECTED } CENTRAL_ACQ_STATES;
-typedef enum { SUBSTATE_IDLE, SUBSTATE_PREPARING, SUBSTATE_PREPARED, SUBSTATE_ACQUIRING } CONNECTED_SUBSTATES;
-
+// Global variable
 static CENTRAL_ACQ_STATES centralAcqState = STATE_DISCONNECTED;
 static CONNECTED_SUBSTATES connectedSubState = SUBSTATE_IDLE;
 
-typedef enum { EV_CONNECT, EV_DISCONNECT, EV_EXAM, EV_NONE } EVENTS;
-
-// --- PROTOTYPES ---
+// Functions prototypes
 static EVENTS getEvent();
 static void handleEvent(EVENTS event);
 static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]);
@@ -148,7 +130,7 @@ void handleEvent(EVENTS event) {
 EVENTS getEvent() {
     char msg[MAX_MSG_SIZE];
     if (checkForMsgOnSerialPort(msg)) {
-        // --- DEBUG PRINT ---
+        // For debugging
         Serial.print("RX PC MSG: "); Serial.println(msg);
 
         if      (strcmp(msg, CONNECT_MSG) == 0)     return EV_CONNECT;

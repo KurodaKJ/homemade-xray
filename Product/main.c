@@ -121,7 +121,6 @@ int main(int argc, char* argv[])
 				} else {
 					printf("Invalid selection.\n");
 				}
-				// --- NEW CODE END ---
 				break;
 			case MO_QUIT:
 				RemovePatient("JohnDoe");
