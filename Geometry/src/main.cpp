@@ -19,11 +19,16 @@ void receiveEvent(int howMany) {
 }
 
 void requestEvent() {
-    if (command >= 1) Wire.write(1); else Wire.write(0);
+    if (command >= 1) {
+        Wire.write(1);
+    }
+    else {
+        Wire.write(0);
+    }
 }
 
 void setup() {
-    Serial.begin(9600); // Enable Debugging
+    Serial.begin(9600);
     Wire.begin(I2C_ADDR);
     Wire.onReceive(receiveEvent);
     Wire.onRequest(requestEvent);
@@ -37,19 +42,28 @@ void setup() {
 }
 
 void loop() {
-    // PRINT NEW COMMANDS
+    // Print the received command
     if (newData) {
-        Serial.print("RX CMD: "); Serial.println(command);
+        Serial.print("RX CMD: ");
+        Serial.println(command);
         newData = false;
     }
 
-    // SERVO LOGIC
-    if (command >= 1) myServo.write(90);
-    else myServo.write(0);
+    // Servo logic
+    if (command >= 1) {
+        myServo.write(90);
+    }
+    else {
+        myServo.write(0);
+    }
 
-    // SAFETY LOGIC
-    if (digitalRead(PIN_SAN_IN) == HIGH) digitalWrite(PIN_SAN_OUT, HIGH);
-    else digitalWrite(PIN_SAN_OUT, LOW);
+    // Safety Logic
+    if (digitalRead(PIN_SAN_IN) == HIGH) {
+         digitalWrite(PIN_SAN_OUT, HIGH);
+    }
+    else {
+        digitalWrite(PIN_SAN_OUT, LOW);
+    }
 
     delay(10);
 }

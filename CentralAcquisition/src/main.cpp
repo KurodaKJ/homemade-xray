@@ -133,15 +133,23 @@ EVENTS getEvent() {
         // For debugging
         Serial.print("RX PC MSG: "); Serial.println(msg);
 
-        if      (strcmp(msg, CONNECT_MSG) == 0)     return EV_CONNECT;
-        else if (strcmp(msg, DISCONNECT_MSG) == 0)  return EV_DISCONNECT;
-        else if (strncmp(msg, "EXAM", 4) == 0)      return EV_EXAM;
+        if (strcmp(msg, CONNECT_MSG) == 0) {
+			return EV_CONNECT;
+		}
+
+		if (strcmp(msg, DISCONNECT_MSG) == 0) {
+			return EV_DISCONNECT;
+		}
+
+        if (strncmp(msg, "EXAM", 4) == 0) {
+			return EV_EXAM;
+		}
     }
     return EV_NONE;
 }
 
 void sendCommand(uint8_t address, uint8_t cmd) {
-    // --- DEBUG PRINT ---
+    // For debugging
     Serial.print("TX I2C [Addr "); Serial.print(address, HEX);
     Serial.print("] Cmd: "); Serial.println(cmd);
 
@@ -152,14 +160,18 @@ void sendCommand(uint8_t address, uint8_t cmd) {
 
 bool isSlaveReady(uint8_t address) {
     Wire.requestFrom(address, (uint8_t)1);
-    if (Wire.available()) return Wire.read() == 1;
+    if (Wire.available()) {
+		return Wire.read() == 1;
+	}
     return false;
 }
 
 static bool writeMsgToSerialPort(const char msg[MAX_MSG_SIZE]) {
     Serial.write(MSG_START_SYMBOL);
     int i = 0;
-    while (i < MAX_MSG_SIZE && msg[i] != '\0') Serial.write(msg[i++]);
+    while (i < MAX_MSG_SIZE && msg[i] != '\0') {
+		Serial.write(msg[i++]);
+	}
     Serial.write(MSG_END_SYMBOL);
     return true;
 }
