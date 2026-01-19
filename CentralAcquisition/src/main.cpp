@@ -1,13 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <string.h>
-
-// --- PROTOCOL ---
-#define MSG_START_SYMBOL  '$'
-#define MSG_END_SYMBOL    '#'
-#define MAX_MSG_SIZE      64
-const char * CONNECT_MSG = "CONNECT";
-const char * DISCONNECT_MSG = "DISCONNECT";
+#include "Protocol_PatientAdmin_CentralAcq.h"
 
 // --- PINS ---
 #define PIN_BTN_PREPARE   2
