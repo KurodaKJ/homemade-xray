@@ -40,8 +40,7 @@ void runConnectedStateMachine(EVENTS event) {
                 connectedSubState = SUBSTATE_PREPARED;
                 digitalWrite(PIN_LED_PREPARED, HIGH);
                 Serial.println(">>> STATE: PREPARING -> PREPARED");
-            }
-            else if (millis() - preparingTimer > 5000) {
+            } else if (millis() - preparingTimer > 5000) {
                 Serial.println("!!! ERROR: Prepare Timeout");
                 sendCommand(ADDR_GEOMETRY, CMD_IDLE);
                 sendCommand(ADDR_XRAY, CMD_IDLE);
@@ -183,15 +182,17 @@ bool checkForMsgOnSerialPort(char msgArg[MAX_MSG_SIZE]) {
 
     if (Serial.available() > 0) {
         char c = Serial.read();
-        if (state == 0 && c == MSG_START_SYMBOL) { idx=0; state=1; }
-        else if (state == 1) {
+        if (state == 0 && c == MSG_START_SYMBOL) {
+            idx=0; state=1;
+        } else if (state == 1) {
             if (c == MSG_END_SYMBOL) {
                 msg[idx] = '\0';
                 strncpy(msgArg, msg, MAX_MSG_SIZE);
                 state = 0;
                 return true;
+            } else if (idx < MAX_MSG_SIZE-1) {
+                msg[idx++] = c;
             }
-            else if (idx < MAX_MSG_SIZE-1) msg[idx++] = c;
         }
     }
     return false;

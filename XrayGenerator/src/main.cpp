@@ -18,7 +18,11 @@ void receiveEvent(int howMany) {
 }
 
 void requestEvent() {
-    if (command >= 1) Wire.write(1); else Wire.write(0);
+    if (command >= 1) {
+        Wire.write(1);
+    } else {
+         Wire.write(0);
+    }
 }
 
 void setup() {

@@ -21,8 +21,7 @@ void receiveEvent(int howMany) {
 void requestEvent() {
     if (command >= 1) {
         Wire.write(1);
-    }
-    else {
+    } else {
         Wire.write(0);
     }
 }
@@ -52,16 +51,14 @@ void loop() {
     // Servo logic
     if (command >= 1) {
         myServo.write(90);
-    }
-    else {
+    } else {
         myServo.write(0);
     }
 
     // Safety Logic
     if (digitalRead(PIN_SAN_IN) == HIGH) {
          digitalWrite(PIN_SAN_OUT, HIGH);
-    }
-    else {
+    } else {
         digitalWrite(PIN_SAN_OUT, LOW);
     }
 
