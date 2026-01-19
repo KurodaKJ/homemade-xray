@@ -2,52 +2,55 @@
 #include <Wire.h>
 
 #define I2C_ADDR        0x09
-
-// --- PIN MAPPING ---
-#define PIN_XRAY_LED    5   // The "X-ray"
-#define PIN_SAN_MASTER  6   // Safety Wire 1 (From Master D6/Hub)
-#define PIN_SAN_GEO     4   // Safety Wire 2 (From Geometry A3)
-#define PIN_LDR         A0  // Light Sensor
+#define PIN_XRAY_LED    5
+#define PIN_SAN_MASTER  6
+#define PIN_SAN_GEO     4
+#define PIN_LDR         A0
 
 volatile int command = 0;
+volatile bool newData = false;
 
 void receiveEvent(int howMany) {
-    if (Wire.available()) command = Wire.read();
+    if (Wire.available()) {
+        command = Wire.read();
+        newData = true;
+    }
 }
 
 void requestEvent() {
-    if (command >= 1) Wire.write(1); // Ready
-    else Wire.write(0);
+    if (command >= 1) Wire.write(1); else Wire.write(0);
 }
 
 void setup() {
+    Serial.begin(9600);
     Wire.begin(I2C_ADDR);
     Wire.onReceive(receiveEvent);
     Wire.onRequest(requestEvent);
-    Serial.begin(9600);
 
     pinMode(PIN_XRAY_LED, OUTPUT);
     pinMode(PIN_SAN_MASTER, INPUT);
     pinMode(PIN_SAN_GEO, INPUT);
+
+    Serial.println("=== XRAY STARTED ===");
 }
 
 void loop() {
-    // 1. READ SAFETY SWITCHES
     bool masterSafe = (digitalRead(PIN_SAN_MASTER) == HIGH);
     bool geoSafe    = (digitalRead(PIN_SAN_GEO) == HIGH);
+    int doseLevel   = analogRead(PIN_LDR);
 
-    // 2. READ DOSE SENSOR
-    int doseLevel = analogRead(PIN_LDR);
+    // PRINT NEW COMMANDS
+    if (newData) {
+        Serial.print("RX CMD: "); Serial.print(command);
+        Serial.print(" | SafeM: "); Serial.print(masterSafe);
+        Serial.print(" | SafeG: "); Serial.println(geoSafe);
+        newData = false;
+    }
 
-    // 3. FIRE LOGIC
     if (command == 2 && masterSafe && geoSafe) {
         digitalWrite(PIN_XRAY_LED, HIGH);
-
-        // Print "Dose" data only while firing
-        Serial.print("FIRING! Dose Rate: ");
-        Serial.println(doseLevel);
+        Serial.print("FIRING! Dose: "); Serial.println(doseLevel);
     } else {
         digitalWrite(PIN_XRAY_LED, LOW);
-        // Silence is golden (No debug spam)
     }
 }
