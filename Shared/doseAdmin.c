@@ -5,7 +5,20 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+typedef struct doseData {
+    uint8_t					   amount;
+    Date						 date;
+    struct    doseData          *next;
+} DoseData;
+
+typedef struct patient {
+    char        name[MAX_PATIENTNAME_SIZE];
+    DoseData						  dose;
+    struct      patient              *next;
+} Patient;
+
 static bool IsDateInRange(Date date, Date startDate, Date endDate);
+void RemoveAllDoseData(DoseData *dose);
 
 Patient* patientList[HASHTABLE_SIZE]; // This will guaranteed to be all NULL already, no?
 

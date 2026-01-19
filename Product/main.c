@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "menu.h"
 #include <fcntl.h>
 #include <string.h>
 #include <time.h>
 
+#include "menu.h"
 #include "doseAdmin.h"
 #include "CentralAcquisitionProxy.h"
 

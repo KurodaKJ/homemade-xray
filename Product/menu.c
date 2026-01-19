@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <fcntl.h>
 
-int getInt();
-
 static const char* MenuStrings[] = {
     "Add Patient",
     "Delete Patient",

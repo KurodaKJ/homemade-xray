@@ -12,19 +12,6 @@ typedef struct {
 	uint16_t  year;   // value in range [1900, 2500]
 } Date;
 
-typedef struct doseData {
-	uint8_t					   amount;
-	Date						 date;
-    struct    doseData          *next;
-} DoseData;
-
-typedef struct patient {
-	char        name[MAX_PATIENTNAME_SIZE];
-	DoseData						  dose;
-    struct      patient              *next;
-} Patient;
-
-
 /*************************************************************************************** 
  * Creates and initializes a hash table. No patient data will be present after creation
  *  
@@ -68,10 +55,6 @@ int8_t AddPatient(char *patientName);
 int8_t AddPatientDose(char patientName[MAX_PATIENTNAME_SIZE], Date* date, 
                       uint16_t dose);
 
-/***************************************************************************************
- * Remove dose data linked list
- */
-void RemoveAllDoseData(DoseData *dose);
 
 /***************************************************************************************
  * Returns the total dose a patient received in passed period.
