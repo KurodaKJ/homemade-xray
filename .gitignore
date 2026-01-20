@@ -31,3 +31,5 @@ lib/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+patient_data.txt
