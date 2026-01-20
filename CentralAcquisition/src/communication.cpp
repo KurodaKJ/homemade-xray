@@ -52,3 +52,29 @@ bool isSlaveReady(uint8_t address) {
 	}
     return false;
 }
+
+
+
+
+void writereg(uint8_t slaveaddress, uint8_t regaddress, uint8_t value) {
+    // For debugging
+    Serial.print("TX I2C [Addr "); Serial.print(slaveaddress, HEX);
+    //Serial.print("] Cmd: "); Serial.println(cmd);
+
+    Wire.beginTransmission(slaveaddress);
+    Wire.write(regaddress);
+    Wire.write(value);
+    Wire.endTransmission();
+}
+
+void readreg(uint8_t slaveaddress, uint8_t regaddress, uint8_t *value) {
+
+    Wire.beginTransmission(slaveaddress);
+    Wire.write(regaddress);
+    Wire.endTransmission();
+
+    Wire.requestFrom(slaveaddress, (uint8_t)1);
+    if (Wire.available()) {
+        *value = Wire.read();
+    }
+}

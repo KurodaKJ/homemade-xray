@@ -65,6 +65,11 @@ int main(int argc, char* argv[])
 			switch (choice)
 			{
 			case MO_ADD_PATIENT:
+			{
+				// Wait for user input
+				int flags = fcntl(0, F_GETFL);
+				fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
+
 				printf("Enter the name of the patient to add: ");
 				scanf("%79s", selectedPatient);
 
@@ -76,7 +81,11 @@ int main(int argc, char* argv[])
 
 				// Clear the input buffer to remove the newline character
 				while (getchar() != '\n');
-				break;
+
+				// Turn Non-Blocking BACK ON (For the main menu loop)
+				fcntl(0, F_SETFL, flags | O_NONBLOCK);
+			}
+			break;
 			case MO_DELETE_PATIENT:
 				if (strlen(selectedPatient) > 0) {
 					if (RemovePatient(selectedPatient) == 0) {
@@ -92,6 +101,7 @@ int main(int argc, char* argv[])
 				// add here your select patient code
 				break;
 			case MO_SELECT_EXAMINATION_TYPE:
+			{
 				if (centralAcqConnectionState != CONNECTED_WITH_CENTRAL_ACQUISITION) {
 					printf("This option is only valid when connected with CentralAcquisition\n");
 					break;
@@ -104,24 +114,21 @@ int main(int argc, char* argv[])
 				printf("  [3] Fluoro\n");
 				printf("Choice: ");
 
-				// 1. Turn OFF Non-Blocking (Make it wait for you)
 				int flags = fcntl(0, F_GETFL);
 				fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
 
 				int examChoice = getInt();
 
-				// 3. Turn Non-Blocking BACK ON (For the main menu loop)
 				fcntl(0, F_SETFL, flags | O_NONBLOCK);
 
-				// Check if input is valid (0-3)
 				if (examChoice >= 0 && examChoice <= 3) {
-					// Send the command to Arduino
 					selectExaminationType((EXAMINATION_TYPES)examChoice);
 					printf("Command sent! Check the Master Arduino...\n");
 				} else {
 					printf("Invalid selection.\n");
 				}
-				break;
+			}
+			break;
 			case MO_QUIT:
 				RemovePatient("JohnDoe");
 
