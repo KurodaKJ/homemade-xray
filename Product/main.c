@@ -35,6 +35,19 @@ int main(int argc, char* argv[])
 	 
 	char selectedPatient[MAX_PATIENTNAME_SIZE] = "JohnDoe";
 	AddPatient(selectedPatient);
+
+	// Display database statistics
+	size_t totalPatients;
+	double averagePerBucket;
+	double stdDeviation;
+
+	GetHashPerformance(&totalPatients, &averagePerBucket, &stdDeviation);
+
+	printf("\n=== Database Statistics ===\n");
+	printf("Total Patients:   %zu\n", totalPatients);
+	printf("Avg per Bucket:   %.4f\n", averagePerBucket);
+	printf("Std Deviation:    %.4f (Lower is better)\n", stdDeviation);
+	printf("===========================\n\n");
 	
 	displayMenu();	
 	while (true) {  
