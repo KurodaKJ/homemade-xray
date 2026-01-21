@@ -307,7 +307,32 @@ int8_t GetNumberOfMeasurements(char patientName[MAX_PATIENTNAME_SIZE], size_t* n
 // Brice: start with totalNumberOfPatients, then averagenumber, then standardDeviation
 void GetHashPerformance(size_t* totalNumberOfPatients, double* averageNumberOfPatients,
                         double* standardDeviation) {
-    // TODO: Implement this!
+    size_t entryCount[HASHTABLE_SIZE] = {0};
+    *totalNumberOfPatients = 0;
+
+    // Iterate through every slot in the hash table
+    // Then count the total number of patient
+    for (int i = 0; i < HASHTABLE_SIZE; i++) {
+        Patient* current = patientList[i];
+
+        while (current != NULL) {
+            entryCount[i]++;
+            (*totalNumberOfPatients)++;
+            current = current->next;
+        }
+    }
+
+    // Calculate average
+    *averageNumberOfPatients = (double)*totalNumberOfPatients / HASHTABLE_SIZE;
+
+    // Calculate standard deviation
+    double sumSquareDiff = 0.0;
+    for (int i = 0; i < HASHTABLE_SIZE; i++) {
+        double diff = entryCount[i] - *averageNumberOfPatients;
+        sumSquareDiff += (diff * diff);
+    }
+
+    *standardDeviation = sqrt(sumSquareDiff / HASHTABLE_SIZE);
 }
 
 int8_t WriteToFile(char filePath[MAX_FILEPATH_LEGTH])
