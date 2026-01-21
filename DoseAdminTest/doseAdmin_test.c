@@ -119,6 +119,34 @@ void test_GetNumberOfMeasurements(void)
     TEST_ASSERT_EQUAL(-1, GetNumberOfMeasurements(janeDoe, &numberOfMeasurements));
 }
 
+void test_GetHashPerformance(void)
+{
+    size_t total = 0;
+    double avg = 0.0;
+    double stdDev = 0.0;
+
+    GetHashPerformance(&total, &avg, &stdDev);
+    TEST_ASSERT_EQUAL_UINT(0, total);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, (float)avg);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, (float)stdDev);
+
+    AddPatient("JohnDoe");
+    GetHashPerformance(&total, &avg, &stdDev);
+
+    TEST_ASSERT_EQUAL_UINT(1, total);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.003906f, (float)avg);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.062f, (float)stdDev);
+
+    AddPatient("JaneDoe");
+    AddPatient("Alice");
+
+    GetHashPerformance(&total, &avg, &stdDev);
+    TEST_ASSERT_EQUAL_UINT(3, total);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)(3.0/HASHTABLE_SIZE), (float)avg);
+}
+
 void test_WriteToFile_ReadFromFile(void)
 {
     char testFilePath[MAX_FILEPATH_LEGTH] = "test_file.txt";
@@ -159,6 +187,7 @@ int main()
     MY_RUN_TEST(test_AddPatientDose);
     MY_RUN_TEST(test_PatientDoseInPeriod);
     MY_RUN_TEST(test_RemovePatient);
+    MY_RUN_TEST(test_GetHashPerformance);
     MY_RUN_TEST(test_GetNumberOfMeasurements);
     MY_RUN_TEST(test_WriteToFile_ReadFromFile);
 

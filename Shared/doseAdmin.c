@@ -40,7 +40,7 @@ static uint8_t hashFunction(char patientName[MAX_PATIENTNAME_SIZE]) {
 
 // Initialize the hash table
 void CreateHashTable() {
-    // Do we really need this?
+    memset(patientList, 0, sizeof(patientList));
 }
 
 // Remove all patient data from the hash table
