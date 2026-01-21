@@ -86,10 +86,13 @@ int main(int argc, char* argv[])
 				printf("Enter the name of the patient to add: ");
 				scanf("%79s", selectedPatient);
 
-				if (AddPatient(selectedPatient) == 0) {
+				if (strcmp(selectedPatient, "JohnDoe") == 0) {
+					printf("Error: You cannot manually add 'JohnDoe'. This is a reserved system patient.\n");
+				}
+				else if (AddPatient(selectedPatient) == 0) {
 					printf("Patient added successfully.\n");
 				} else {
-					printf("Failed to add patient.\n");
+					printf("Failed to add patient (Duplicate or Memory Full).\n");
 				}
 
 				// Clear the input buffer to remove the newline character
