@@ -178,6 +178,25 @@ void test_WriteToFile_ReadFromFile(void)
     remove(testFilePath);
 }
 
+void test_Persistence_Failures(void)
+{
+    char validPath[MAX_FILEPATH_LEGTH] = "test_duplicate.txt";
+    char ghostPath[MAX_FILEPATH_LEGTH] = "ghost_file.txt";
+    char badPath[MAX_FILEPATH_LEGTH]   = "non_existent_folder/file.txt";
+
+    TEST_ASSERT_EQUAL(-1, WriteToFile(badPath));
+
+    TEST_ASSERT_EQUAL(-1, ReadFromFile(ghostPath));
+
+    AddPatient("UniqueUser");
+    WriteToFile(validPath);
+
+    TEST_ASSERT_EQUAL(-1, ReadFromFile(validPath));
+
+    // Cleanup
+    remove(validPath);
+}
+
 int main()
 {
     UnityBegin();
@@ -190,6 +209,7 @@ int main()
     MY_RUN_TEST(test_GetHashPerformance);
     MY_RUN_TEST(test_GetNumberOfMeasurements);
     MY_RUN_TEST(test_WriteToFile_ReadFromFile);
+    MY_RUN_TEST(test_Persistence_Failures);
 
     UnityEnd();
 }
