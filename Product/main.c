@@ -98,7 +98,26 @@ int main(int argc, char* argv[])
 				}
 				break;
 			case MO_SELECT_PATIENT:
-				// add here your select patient code
+				int flags = fcntl(0, F_GETFL);
+				fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
+
+				char inputName[MAX_PATIENTNAME_SIZE];
+				printf("Enter the name of the patient to select: ");
+				if (scanf("%79s", inputName) == 1) {
+					// 2. Check if patient exists in the Hash Table
+					if (IsPatientPresent(inputName) == 0) {
+						strcpy(selectedPatient, inputName);
+						printf("Selected patient: '%s'\n", selectedPatient);
+					} else {
+						printf("Patient '%s' not found!\n", inputName);
+					}
+				}
+
+				// Clear buffer
+				while (getchar() != '\n');
+
+				// 3. Restore Non-Blocking mode
+				fcntl(0, F_SETFL, flags | O_NONBLOCK);
 				break;
 			case MO_SELECT_EXAMINATION_TYPE:
 			{
