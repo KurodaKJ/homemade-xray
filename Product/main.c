@@ -84,15 +84,33 @@ int main(int argc, char* argv[])
 				fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
 
 				printf("Enter the name of the patient to add: ");
-				scanf("%79s", selectedPatient);
+				scanf("%s", selectedPatient);
 
 				if (strcmp(selectedPatient, "JohnDoe") == 0) {
 					printf("Error: You cannot manually add 'JohnDoe'. This is a reserved system patient.\n");
 				}
-				else if (AddPatient(selectedPatient) == 0) {
-					printf("Patient added successfully.\n");
-				} else {
-					printf("Failed to add patient (Duplicate or Memory Full).\n");
+				else {
+					// 3. Call function and capture the specific result
+					int8_t result = AddPatient(selectedPatient);
+
+					// 4. Handle specific error codes
+					switch (result) {
+					case 0:
+						printf("Patient added successfully.\n");
+						break;
+					case -1:
+						printf("Error: Patient '%s' is already present.\n", selectedPatient);
+						break;
+					case -2:
+						printf("Error: Memory allocation failed (Heap might be full).\n");
+						break;
+					case -3:
+						printf("Error: Name is too long (Max %d characters).\n", MAX_PATIENTNAME_SIZE);
+						break;
+					default:
+						printf("Error: Unknown error code (%d).\n", result);
+						break;
+					}
 				}
 
 				// Clear the input buffer to remove the newline character
